@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>漢字テスト 5年生 1学期</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
+  background: #1a1a2e;
+  color: #eee;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+.screen { display: none; min-height: 100vh; padding: 20px; }
+.screen.active { display: flex; flex-direction: column; align-items: center; }
+
+/* Home Screen */
+#home { justify-content: center; gap: 20px; }
+#home h1 { font-size: 28px; text-align: center; margin-bottom: 10px; }
+#home .subtitle { color: #aaa; font-size: 14px; margin-bottom: 20px; }
+.test-btn {
+  width: 100%; max-width: 350px; padding: 18px 24px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border: none; border-radius: 16px; color: #fff;
+  font-size: 18px; font-weight: bold; cursor: pointer;
+  display: flex; justify-content: space-between; align-items: center;
+  transition: transform 0.15s;
+}
+.test-btn:active { transform: scale(0.97); }
+.test-btn .progress { font-size: 13px; opacity: 0.8; }
+.mode-toggle {
+  display: flex; gap: 8px; margin-bottom: 10px; width: 100%; max-width: 350px;
+}
+.mode-btn {
+  flex: 1; padding: 12px; border: 2px solid #667eea; border-radius: 12px;
+  background: transparent; color: #667eea; font-size: 14px; font-weight: bold;
+  cursor: pointer;
+}
+.mode-btn.active { background: #667eea; color: #fff; }
+.reset-btn {
+  margin-top: 20px; padding: 12px 24px; background: #333;
+  border: 1px solid #555; border-radius: 12px; color: #aaa;
+  font-size: 14px; cursor: pointer;
+}
+
+/* Quiz Screen */
+#quiz { padding-top: 10px; }
+.quiz-header {
+  width: 100%; max-width: 500px; display: flex;
+  justify-content: space-between; align-items: center;
+  margin-bottom: 8px;
+}
+.back-btn {
+  background: none; border: none; color: #667eea;
+  font-size: 16px; cursor: pointer; padding: 8px;
+}
+.quiz-progress { font-size: 14px; color: #aaa; }
+.quiz-score { font-size: 14px; color: #4ecdc4; }
+.progress-bar {
+  width: 100%; max-width: 500px; height: 6px;
+  background: #333; border-radius: 3px; margin-bottom: 16px;
+}
+.progress-fill {
+  height: 100%; background: linear-gradient(90deg, #667eea, #4ecdc4);
+  border-radius: 3px; transition: width 0.3s;
+}
+.question-card {
+  width: 100%; max-width: 500px; background: #16213e;
+  border-radius: 20px; padding: 24px; margin-bottom: 16px;
+}
+.question-num { font-size: 13px; color: #667eea; margin-bottom: 8px; }
+.question-sentence { font-size: 20px; line-height: 1.6; margin-bottom: 8px; }
+.question-reading {
+  display: inline-block; background: #667eea33;
+  padding: 4px 12px; border-radius: 8px; font-size: 16px; color: #667eea;
+}
+
+/* Canvas */
+.canvas-container {
+  width: 100%; max-width: 500px; margin-bottom: 12px; position: relative;
+}
+#drawCanvas {
+  width: 100%; aspect-ratio: 2/1; background: #fff;
+  border-radius: 16px; touch-action: none; cursor: crosshair;
+}
+.canvas-guide {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  color: #ccc; font-size: 14px; pointer-events: none;
+  transition: opacity 0.3s;
+}
+.btn-row {
+  display: flex; gap: 10px; width: 100%; max-width: 500px; margin-bottom: 12px;
+}
+.action-btn {
+  flex: 1; padding: 14px; border: none; border-radius: 12px;
+  font-size: 16px; font-weight: bold; cursor: pointer;
+  transition: transform 0.15s;
+}
+.action-btn:active { transform: scale(0.95); }
+.clear-btn { background: #333; color: #aaa; }
+.submit-btn { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; }
+.skip-btn { background: #333; color: #f39c12; }
+
+/* Feedback */
+.feedback {
+  width: 100%; max-width: 500px; padding: 16px;
+  border-radius: 16px; margin-bottom: 12px;
+  text-align: center; font-size: 18px; font-weight: bold;
+  display: none;
+}
+.feedback.correct { display: block; background: #1b4332; color: #4ecdc4; }
+.feedback.incorrect { display: block; background: #3d0000; color: #ff6b6b; }
+.feedback .answer-display { font-size: 48px; margin: 8px 0; }
+.next-btn {
+  width: 100%; max-width: 500px; padding: 16px;
+  background: linear-gradient(135deg, #4ecdc4, #44bd9e);
+  border: none; border-radius: 12px; color: #fff;
+  font-size: 18px; font-weight: bold; cursor: pointer;
+  display: none;
+}
+
+/* Results Screen */
+#results { justify-content: center; gap: 16px; text-align: center; }
+.results-score {
+  font-size: 72px; font-weight: bold;
+  background: linear-gradient(135deg, #667eea, #4ecdc4);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.results-label { font-size: 18px; color: #aaa; }
+.results-detail { font-size: 16px; color: #ccc; margin: 8px 0; }
+.wrong-list {
+  width: 100%; max-width: 400px; text-align: left;
+  background: #16213e; border-radius: 16px; padding: 16px;
+  max-height: 300px; overflow-y: auto;
+}
+.wrong-list h3 { color: #ff6b6b; margin-bottom: 12px; font-size: 16px; }
+.wrong-item {
+  padding: 8px 0; border-bottom: 1px solid #ffffff15;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.wrong-item:last-child { border: none; }
+.wrong-q { font-size: 14px; flex: 1; }
+.wrong-a { font-size: 20px; color: #4ecdc4; margin-left: 8px; font-weight: bold; }
+
+/* Typing mode */
+.typing-input {
+  width: 100%; max-width: 500px; margin-bottom: 12px;
+}
+.typing-input input {
+  width: 100%; padding: 16px; font-size: 24px; text-align: center;
+  background: #fff; border: 3px solid #667eea; border-radius: 16px;
+  color: #333; outline: none;
+}
+.typing-input input:focus { border-color: #4ecdc4; }
+</style>
+</head>
+<body>
+
+<!-- Home Screen -->
+<div id="home" class="screen active">
+  <h1>漢字テスト<br>5年生 1学期</h1>
+  <p class="subtitle">手書きで漢字を練習しよう！</p>
+  <div class="mode-toggle">
+    <button class="mode-btn active" onclick="setMode('draw')">手書きモード</button>
+    <button class="mode-btn" onclick="setMode('type')">入力モード</button>
+  </div>
+  <div id="testButtons"></div>
+  <button class="reset-btn" onclick="resetAll()">記録をリセット</button>
+</div>
+
+<!-- Quiz Screen -->
+<div id="quiz" class="screen">
+  <div class="quiz-header">
+    <button class="back-btn" onclick="goHome()">← 戻る</button>
+    <span class="quiz-progress" id="qProgress"></span>
+    <span class="quiz-score" id="qScore"></span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="question-card">
+    <div class="question-num" id="qNum"></div>
+    <div class="question-sentence" id="qSentence"></div>
+    <div class="question-reading" id="qReading"></div>
+  </div>
+
+  <!-- Drawing mode -->
+  <div id="drawMode">
+    <div class="canvas-container">
+      <canvas id="drawCanvas"></canvas>
+      <div class="canvas-guide" id="canvasGuide">ここに漢字を書いてください</div>
+    </div>
+    <div class="btn-row">
+      <button class="action-btn clear-btn" onclick="clearCanvas()">消す</button>
+      <button class="action-btn submit-btn" onclick="submitAnswer()">答え合わせ</button>
+    </div>
+  </div>
+
+  <!-- Typing mode -->
+  <div id="typeMode" style="display:none;">
+    <div class="typing-input">
+      <input type="text" id="typeInput" placeholder="漢字を入力" autocomplete="off">
+    </div>
+    <div class="btn-row">
+      <button class="action-btn clear-btn" onclick="document.getElementById('typeInput').value=''">消す</button>
+      <button class="action-btn submit-btn" onclick="submitTyped()">答え合わせ</button>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="action-btn skip-btn" onclick="skipQuestion()">スキップ</button>
+  </div>
+  <div class="feedback" id="feedback"></div>
+  <button class="next-btn" id="nextBtn" onclick="nextQuestion()">次の問題 →</button>
+</div>
+
+<!-- Results Screen -->
+<div id="results" class="screen">
+  <div class="results-label">テスト結果</div>
+  <div class="results-score" id="rScore"></div>
+  <div class="results-detail" id="rDetail"></div>
+  <div class="wrong-list" id="wrongList" style="display:none;">
+    <h3>間違えた問題</h3>
+    <div id="wrongItems"></div>
+  </div>
+  <button class="test-btn" onclick="retryWrong()" id="retryBtn" style="display:none;max-width:350px;margin-top:8px;">
+    間違えた問題をもう一度
+  </button>
+  <button class="test-btn" onclick="goHome()" style="max-width:350px;margin-top:8px;">
+    ホームに戻る
+  </button>
+</div>
+
+<script>
+// ===== KANJI TEST DATA =====
+// 5年生1学期 漢字テスト 第1回〜第5回 各48問
+const testData = [
+  // 第1回
+  {
+    name: "第1回",
+    questions: [
+      { sentence: "漢字の（いみ）を調べる。", reading: "いみ", answer: "意味" },
+      { sentence: "お正月の（おいわい）をする。", reading: "おいわい", answer: "お祝い" },
+      { sentence: "（きけん）な場所には近づかない。", reading: "きけん", answer: "危険" },
+      { sentence: "（てんきよほう）によると明日は晴れだそうだ。", reading: "てんきよほう", answer: "天気予報" },
+      { sentence: "木の（えだ）がのびる。", reading: "えだ", answer: "枝" },
+      { sentence: "（しぜん）の中で遊ぶ。", reading: "しぜん", answer: "自然" },
+      { sentence: "（たいど）を正す。", reading: "たいど", answer: "態度" },
+      { sentence: "（けいざい）のことを学ぶ。", reading: "けいざい", answer: "経済" },
+      { sentence: "お寺の（きょう）を読む。", reading: "きょう", answer: "経" },
+      { sentence: "（そんちょう）する気持ちを持つ。", reading: "そんちょう", answer: "尊重" },
+      { sentence: "二つの意見を（ひかく）する。", reading: "ひかく", answer: "比較" },
+      { sentence: "（げんいん）を調べる。", reading: "げんいん", answer: "原因" },
+      { sentence: "（けいけん）を積む。", reading: "けいけん", answer: "経験" },
+      { sentence: "海の（しお）の流れ。", reading: "しお", answer: "潮" },
+      { sentence: "（こうどう）に移す。", reading: "こうどう", answer: "行動" },
+      { sentence: "（みずうみ）のほとりを歩く。", reading: "みずうみ", answer: "湖" },
+      { sentence: "（りょう）がよい品物を選ぶ。", reading: "りょう", answer: "良" },
+      { sentence: "（あたい）を求める。", reading: "あたい", answer: "値" },
+      { sentence: "古い（でんとう）を守る。", reading: "でんとう", answer: "伝統" },
+      { sentence: "木の（み）が実る。", reading: "み", answer: "実" },
+      { sentence: "（あたりまえ）のことをきちんとする。", reading: "あたりまえ", answer: "当たり前" },
+      { sentence: "（きそく）正しい生活をする。", reading: "きそく", answer: "規則" },
+      { sentence: "友だちとの（きずな）を大切にする。", reading: "きずな", answer: "絆" },
+      { sentence: "（りそう）の姿を目指す。", reading: "りそう", answer: "理想" },
+      { sentence: "（じつげん）に向けて努力する。", reading: "じつげん", answer: "実現" },
+      { sentence: "小さな島の（ぎょそん）で暮らす。", reading: "ぎょそん", answer: "漁村" },
+      { sentence: "大きな（たいこ）を打つ。", reading: "たいこ", answer: "太鼓" },
+      { sentence: "日本の（ぶんか）を伝える。", reading: "ぶんか", answer: "文化" },
+      { sentence: "（じょうけん）をそろえる。", reading: "じょうけん", answer: "条件" },
+      { sentence: "声を（げんりょう）する。", reading: "げんりょう", answer: "減量" },
+      { sentence: "（てきど）な運動をする。", reading: "てきど", answer: "適度" },
+      { sentence: "車の（しゅうり）をする。", reading: "しゅうり", answer: "修理" },
+      { sentence: "（せいか）を発表する。", reading: "せいか", answer: "成果" },
+      { sentence: "ルールを（やぶる）。", reading: "やぶる", answer: "破る" },
+      { sentence: "（きょうそう）に勝つ。", reading: "きょうそう", answer: "競争" },
+      { sentence: "（あたま）を使って考える。", reading: "あたま", answer: "頭" },
+      { sentence: "田んぼに（みず）をはる。", reading: "みず", answer: "水" },
+      { sentence: "特別な（ぎじゅつ）を持つ。", reading: "ぎじゅつ", answer: "技術" },
+      { sentence: "外国との（ぼうえき）をする。", reading: "ぼうえき", answer: "貿易" },
+      { sentence: "スコアが（へいきん）を上回る。", reading: "へいきん", answer: "平均" },
+      { sentence: "新しい（しょくぎょう）に就く。", reading: "しょくぎょう", answer: "職業" },
+      { sentence: "石の（はか）を建てる。", reading: "はか", answer: "墓" },
+      { sentence: "新聞の（きじ）を読む。", reading: "きじ", answer: "記事" },
+      { sentence: "（まじわる）ことで成長する。", reading: "まじわる", answer: "交わる" },
+      { sentence: "田の（あぜみち）を歩く。", reading: "あぜみち", answer: "畔道" },
+      { sentence: "（てっきょう）を渡る。", reading: "てっきょう", answer: "鉄橋" },
+      { sentence: "正しい（はんだん）をする。", reading: "はんだん", answer: "判断" },
+      { sentence: "海で（つり）をする。", reading: "つり", answer: "釣り" },
+    ]
+  },
+  // 第2回
+  {
+    name: "第2回",
+    questions: [
+      { sentence: "（けっしん）して新しいことを始める。", reading: "けっしん", answer: "決心" },
+      { sentence: "（あさ）の散歩をする。", reading: "あさ", answer: "朝" },
+      { sentence: "（きょうみ）を持って学ぶ。", reading: "きょうみ", answer: "興味" },
+      { sentence: "（しんぱい）ごとがある。", reading: "しんぱい", answer: "心配" },
+      { sentence: "時間を（せつやく）する。", reading: "せつやく", answer: "節約" },
+      { sentence: "友だちと（きょうりょく）する。", reading: "きょうりょく", answer: "協力" },
+      { sentence: "漢字の（おん）と訓を覚える。", reading: "おん", answer: "音" },
+      { sentence: "（こうぞう）を調べる。", reading: "こうぞう", answer: "構造" },
+      { sentence: "大事な場面を（さつえい）する。", reading: "さつえい", answer: "撮影" },
+      { sentence: "（ようす）を観察する。", reading: "ようす", answer: "様子" },
+      { sentence: "（えいきょう）を受ける。", reading: "えいきょう", answer: "影響" },
+      { sentence: "いろいろな（しゅるい）がある。", reading: "しゅるい", answer: "種類" },
+      { sentence: "（しげん）を大切にする。", reading: "しげん", answer: "資源" },
+      { sentence: "（ほけん）に加入する。", reading: "ほけん", answer: "保険" },
+      { sentence: "学校の（きまり）を守る。", reading: "きまり", answer: "決まり" },
+      { sentence: "（のうりょく）を伸ばす。", reading: "のうりょく", answer: "能力" },
+      { sentence: "（でんき）をつける。", reading: "でんき", answer: "電気" },
+      { sentence: "（こうはん）の試合が始まる。", reading: "こうはん", answer: "後半" },
+      { sentence: "大きな声で（おうえん）する。", reading: "おうえん", answer: "応援" },
+      { sentence: "（けんり）と義務を学ぶ。", reading: "けんり", answer: "権利" },
+      { sentence: "（ぶんしょう）を書く。", reading: "ぶんしょう", answer: "文章" },
+      { sentence: "（あん）を出し合う。", reading: "あん", answer: "案" },
+      { sentence: "新しい（せいど）ができた。", reading: "せいど", answer: "制度" },
+      { sentence: "物語の（しゅじんこう）になる。", reading: "しゅじんこう", answer: "主人公" },
+      { sentence: "（にちじょう）の生活を送る。", reading: "にちじょう", answer: "日常" },
+      { sentence: "古い（きろく）を調べる。", reading: "きろく", answer: "記録" },
+      { sentence: "（たいよう）の光を浴びる。", reading: "たいよう", answer: "太陽" },
+      { sentence: "体の（きんにく）をきたえる。", reading: "きんにく", answer: "筋肉" },
+      { sentence: "日本の（れきし）を学ぶ。", reading: "れきし", answer: "歴史" },
+      { sentence: "（いっぱん）に知られていること。", reading: "いっぱん", answer: "一般" },
+      { sentence: "小さな島に上陸する（たんけん）隊。", reading: "たんけん", answer: "探検" },
+      { sentence: "（かんきょう）を守る活動をする。", reading: "かんきょう", answer: "環境" },
+      { sentence: "色の（のうど）を変える。", reading: "のうど", answer: "濃度" },
+      { sentence: "この本は（にんき）がある。", reading: "にんき", answer: "人気" },
+      { sentence: "先生に（しつもん）する。", reading: "しつもん", answer: "質問" },
+      { sentence: "（えんそく）で山に登る。", reading: "えんそく", answer: "遠足" },
+      { sentence: "自分の（いけん）を述べる。", reading: "いけん", answer: "意見" },
+      { sentence: "（ようちえん）に通う。", reading: "ようちえん", answer: "幼稚園" },
+      { sentence: "一番の（しんゆう）だと思う。", reading: "しんゆう", answer: "親友" },
+      { sentence: "（はんたい）の意見を聞く。", reading: "はんたい", answer: "反対" },
+      { sentence: "問題を（かいけつ）する。", reading: "かいけつ", answer: "解決" },
+      { sentence: "新しい（はっけん）をする。", reading: "はっけん", answer: "発見" },
+      { sentence: "（もくひょう）を立てる。", reading: "もくひょう", answer: "目標" },
+      { sentence: "（きょうかしょ）を開く。", reading: "きょうかしょ", answer: "教科書" },
+      { sentence: "（せんたく）ものを干す。", reading: "せんたく", answer: "洗濯" },
+      { sentence: "（あんぜん）に気をつける。", reading: "あんぜん", answer: "安全" },
+      { sentence: "（べんきょう）に集中する。", reading: "べんきょう", answer: "勉強" },
+      { sentence: "海で（およぐ）のが好きだ。", reading: "およぐ", answer: "泳ぐ" },
+    ]
+  },
+  // 第3回
+  {
+    name: "第3回",
+    questions: [
+      { sentence: "（しゅうかく）の秋がきた。", reading: "しゅうかく", answer: "収穫" },
+      { sentence: "（たからもの）を見つけた。", reading: "たからもの", answer: "宝物" },
+      { sentence: "（いっしょう）の思い出になる。", reading: "いっしょう", answer: "一生" },
+      { sentence: "（えいせい）的な環境を保つ。", reading: "えいせい", answer: "衛生" },
+      { sentence: "道路を（おうだん）する。", reading: "おうだん", answer: "横断" },
+      { sentence: "人を助けて（かんしゃ）される。", reading: "かんしゃ", answer: "感謝" },
+      { sentence: "（きじゅん）を満たす。", reading: "きじゅん", answer: "基準" },
+      { sentence: "山の（ちょうじょう）に立つ。", reading: "ちょうじょう", answer: "頂上" },
+      { sentence: "お寺で（ざぜん）を組む。", reading: "ざぜん", answer: "座禅" },
+      { sentence: "（くんれん）をくり返す。", reading: "くんれん", answer: "訓練" },
+      { sentence: "（はば）が広い道路。", reading: "はば", answer: "幅" },
+      { sentence: "木の（かわ）をむく。", reading: "かわ", answer: "皮" },
+      { sentence: "（はんにん）を捕まえる。", reading: "はんにん", answer: "犯人" },
+      { sentence: "車の（こしょう）を直す。", reading: "こしょう", answer: "故障" },
+      { sentence: "（ぎゃく）の順番に並べる。", reading: "ぎゃく", answer: "逆" },
+      { sentence: "バスが（ていりゅうじょ）に止まる。", reading: "ていりゅうじょ", answer: "停留所" },
+      { sentence: "親の（きょか）をもらう。", reading: "きょか", answer: "許可" },
+      { sentence: "作品を（てんじ）する。", reading: "てんじ", answer: "展示" },
+      { sentence: "（そうぞう）力を働かせる。", reading: "そうぞう", answer: "想像" },
+      { sentence: "島の（ふうけい）がすばらしい。", reading: "ふうけい", answer: "風景" },
+      { sentence: "（ちじ）が会見を開く。", reading: "ちじ", answer: "知事" },
+      { sentence: "大きな（こうえん）がある。", reading: "こうえん", answer: "公園" },
+      { sentence: "（とくちょう）をとらえる。", reading: "とくちょう", answer: "特徴" },
+      { sentence: "（やちん）を払う。", reading: "やちん", answer: "家賃" },
+      { sentence: "学校の（こうちょう）先生。", reading: "こうちょう", answer: "校長" },
+      { sentence: "（けいかく）を立てる。", reading: "けいかく", answer: "計画" },
+      { sentence: "野球の（しあい）を見る。", reading: "しあい", answer: "試合" },
+      { sentence: "（こくさい）的な交流をする。", reading: "こくさい", answer: "国際" },
+      { sentence: "列の（さいご）に並ぶ。", reading: "さいご", answer: "最後" },
+      { sentence: "風が（ふく）日。", reading: "ふく", answer: "吹く" },
+      { sentence: "（かいがん）で遊ぶ。", reading: "かいがん", answer: "海岸" },
+      { sentence: "（おく）の部屋に行く。", reading: "おく", answer: "奥" },
+      { sentence: "この花の（みりょく）を伝える。", reading: "みりょく", answer: "魅力" },
+      { sentence: "（ゆうしょう）を目指す。", reading: "ゆうしょう", answer: "優勝" },
+      { sentence: "（せいぶつ）の生態を調べる。", reading: "せいぶつ", answer: "生物" },
+      { sentence: "（ちりょう）を受ける。", reading: "ちりょう", answer: "治療" },
+      { sentence: "（しょうにん）をもらう。", reading: "しょうにん", answer: "承認" },
+      { sentence: "（えいよう）のバランスを考える。", reading: "えいよう", answer: "栄養" },
+      { sentence: "（ほうこく）書を書く。", reading: "ほうこく", answer: "報告" },
+      { sentence: "グループの（だいひょう）を決める。", reading: "だいひょう", answer: "代表" },
+      { sentence: "（けいたい）電話をかける。", reading: "けいたい", answer: "携帯" },
+      { sentence: "（にっき）をつける。", reading: "にっき", answer: "日記" },
+      { sentence: "（じっけん）をして確かめる。", reading: "じっけん", answer: "実験" },
+      { sentence: "（かいほう）された気分になる。", reading: "かいほう", answer: "解放" },
+      { sentence: "植物が（せいちょう）する。", reading: "せいちょう", answer: "成長" },
+      { sentence: "（はんい）を決める。", reading: "はんい", answer: "範囲" },
+      { sentence: "（れんしゅう）の成果を出す。", reading: "れんしゅう", answer: "練習" },
+      { sentence: "（どりょく）を続ける。", reading: "どりょく", answer: "努力" },
+      { sentence: "（ぜんこく）大会に出場する。", reading: "ぜんこく", answer: "全国" },
+      { sentence: "新しい（ほうほう）を考える。", reading: "ほうほう", answer: "方法" },
+    ]
+  },
+  // 第4回
+  {
+    name: "第4回",
+    questions: [
+      { sentence: "（かんじ）の読み書きを学ぶ。", reading: "かんじ", answer: "漢字" },
+      { sentence: "（たいせつ）に扱う。", reading: "たいせつ", answer: "大切" },
+      { sentence: "（しょうたい）状を送る。", reading: "しょうたい", answer: "招待" },
+      { sentence: "（きんぞく）でできた道具。", reading: "きんぞく", answer: "金属" },
+      { sentence: "日本の（こくど）は狭い。", reading: "こくど", answer: "国土" },
+      { sentence: "大きな（たてもの）が建つ。", reading: "たてもの", answer: "建物" },
+      { sentence: "（せんもん）家に相談する。", reading: "せんもん", answer: "専門" },
+      { sentence: "（けんさ）を受ける。", reading: "けんさ", answer: "検査" },
+      { sentence: "（ねんれい）を聞く。", reading: "ねんれい", answer: "年齢" },
+      { sentence: "（そうだん）する相手がいる。", reading: "そうだん", answer: "相談" },
+      { sentence: "（きぼう）を持って生きる。", reading: "きぼう", answer: "希望" },
+      { sentence: "正しい（しせい）で座る。", reading: "しせい", answer: "姿勢" },
+      { sentence: "（さんせい）の意見が多い。", reading: "さんせい", answer: "賛成" },
+      { sentence: "（てんらんかい）に行く。", reading: "てんらんかい", answer: "展覧会" },
+      { sentence: "（おんど）が上がる。", reading: "おんど", answer: "温度" },
+      { sentence: "古い（しきたり）を守る。", reading: "しきたり", answer: "仕来たり" },
+      { sentence: "（とくべつ）な日を祝う。", reading: "とくべつ", answer: "特別" },
+      { sentence: "品物の（ざいこ）を調べる。", reading: "ざいこ", answer: "在庫" },
+      { sentence: "（こうつう）ルールを守る。", reading: "こうつう", answer: "交通" },
+      { sentence: "外国の（ぶんか）を学ぶ。", reading: "ぶんか", answer: "文化" },
+      { sentence: "（すいせん）の花が咲く。", reading: "すいせん", answer: "水仙" },
+      { sentence: "よい（せいせき）をとる。", reading: "せいせき", answer: "成績" },
+      { sentence: "（ひっし）に走る。", reading: "ひっし", answer: "必死" },
+      { sentence: "長い（れつ）に並ぶ。", reading: "れつ", answer: "列" },
+      { sentence: "（はたけ）で野菜を作る。", reading: "はたけ", answer: "畑" },
+      { sentence: "彼は（おだやか）な性格だ。", reading: "おだやか", answer: "穏やか" },
+      { sentence: "（にんたい）強く待つ。", reading: "にんたい", answer: "忍耐" },
+      { sentence: "（きゅうりょう）をもらう。", reading: "きゅうりょう", answer: "給料" },
+      { sentence: "（へいわ）な世界を望む。", reading: "へいわ", answer: "平和" },
+      { sentence: "（がんばる）ことが大事だ。", reading: "がんばる", answer: "頑張る" },
+      { sentence: "（きゅうきゅうしゃ）を呼ぶ。", reading: "きゅうきゅうしゃ", answer: "救急車" },
+      { sentence: "（さくひん）を作る。", reading: "さくひん", answer: "作品" },
+      { sentence: "（よさん）を立てる。", reading: "よさん", answer: "予算" },
+      { sentence: "（えんげき）を見に行く。", reading: "えんげき", answer: "演劇" },
+      { sentence: "日本（けんぽう）を学ぶ。", reading: "けんぽう", answer: "憲法" },
+      { sentence: "車が（こしょう）した。", reading: "こしょう", answer: "故障" },
+      { sentence: "（じしん）に備える。", reading: "じしん", answer: "地震" },
+      { sentence: "問題の（かいとう）を書く。", reading: "かいとう", answer: "解答" },
+      { sentence: "（きょうそう）相手に負けない。", reading: "きょうそう", answer: "競争" },
+      { sentence: "日本の（りょうど）を守る。", reading: "りょうど", answer: "領土" },
+      { sentence: "（うんどうかい）の準備をする。", reading: "うんどうかい", answer: "運動会" },
+      { sentence: "（さんすう）の問題を解く。", reading: "さんすう", answer: "算数" },
+      { sentence: "（おんがく）を聴く。", reading: "おんがく", answer: "音楽" },
+      { sentence: "友達に（しんせつ）にする。", reading: "しんせつ", answer: "親切" },
+      { sentence: "（かぜ）をひいて休む。", reading: "かぜ", answer: "風邪" },
+      { sentence: "朝ご飯を（たべる）。", reading: "たべる", answer: "食べる" },
+      { sentence: "（むかし）の話を聞く。", reading: "むかし", answer: "昔" },
+      { sentence: "勉強に（しゅうちゅう）する。", reading: "しゅうちゅう", answer: "集中" },
+    ]
+  },
+  // 第5回
+  {
+    name: "第5回",
+    questions: [
+      { sentence: "（でんわ）で連絡する。", reading: "でんわ", answer: "電話" },
+      { sentence: "夕焼けが（うつくしい）。", reading: "うつくしい", answer: "美しい" },
+      { sentence: "花の（たね）をまく。", reading: "たね", answer: "種" },
+      { sentence: "（さくら）の花が咲く。", reading: "さくら", answer: "桜" },
+      { sentence: "（こうじょう）で働く。", reading: "こうじょう", answer: "工場" },
+      { sentence: "（げんざい）の状況を伝える。", reading: "げんざい", answer: "現在" },
+      { sentence: "紙を（はんぶん）に折る。", reading: "はんぶん", answer: "半分" },
+      { sentence: "新しい（ぎじゅつ）を開発する。", reading: "ぎじゅつ", answer: "技術" },
+      { sentence: "（れいぎ）正しい人。", reading: "れいぎ", answer: "礼儀" },
+      { sentence: "（しょうらい）の夢を語る。", reading: "しょうらい", answer: "将来" },
+      { sentence: "（ふくざつ）な問題を解く。", reading: "ふくざつ", answer: "複雑" },
+      { sentence: "先生を（そんけい）する。", reading: "そんけい", answer: "尊敬" },
+      { sentence: "（はんだん）力を養う。", reading: "はんだん", answer: "判断" },
+      { sentence: "（かわ）の流れが速い。", reading: "かわ", answer: "川" },
+      { sentence: "（りゆう）を説明する。", reading: "りゆう", answer: "理由" },
+      { sentence: "新聞を（はいたつ）する。", reading: "はいたつ", answer: "配達" },
+      { sentence: "（けんちく）家になりたい。", reading: "けんちく", answer: "建築" },
+      { sentence: "（きおく）に残る出来事。", reading: "きおく", answer: "記憶" },
+      { sentence: "（こうえん）で遊ぶ。", reading: "こうえん", answer: "公園" },
+      { sentence: "（やくそく）を守る。", reading: "やくそく", answer: "約束" },
+      { sentence: "（はっぴょう）の準備をする。", reading: "はっぴょう", answer: "発表" },
+      { sentence: "（せっけい）図を描く。", reading: "せっけい", answer: "設計" },
+      { sentence: "友達と（なかよく）遊ぶ。", reading: "なかよく", answer: "仲良く" },
+      { sentence: "（しりょう）を集める。", reading: "しりょう", answer: "資料" },
+      { sentence: "（こんなん）を乗り越える。", reading: "こんなん", answer: "困難" },
+      { sentence: "大きな（こえ）で返事をする。", reading: "こえ", answer: "声" },
+      { sentence: "（すうがく）の授業を受ける。", reading: "すうがく", answer: "数学" },
+      { sentence: "（けんこう）に気をつける。", reading: "けんこう", answer: "健康" },
+      { sentence: "森を（さんぽ）する。", reading: "さんぽ", answer: "散歩" },
+      { sentence: "（さいのう）を発揮する。", reading: "さいのう", answer: "才能" },
+      { sentence: "ことばの（いみ）を調べる。", reading: "いみ", answer: "意味" },
+      { sentence: "自分の（かんがえ）を伝える。", reading: "かんがえ", answer: "考え" },
+      { sentence: "部屋を（かたづける）。", reading: "かたづける", answer: "片付ける" },
+      { sentence: "指を使って（かぞえる）。", reading: "かぞえる", answer: "数える" },
+      { sentence: "小さな（むし）を観察する。", reading: "むし", answer: "虫" },
+      { sentence: "（ゆうき）を出して挑戦する。", reading: "ゆうき", answer: "勇気" },
+      { sentence: "世界の（へいわ）を願う。", reading: "へいわ", answer: "平和" },
+      { sentence: "大きな（こうえん）で走る。", reading: "こうえん", answer: "公園" },
+      { sentence: "（あんない）してもらう。", reading: "あんない", answer: "案内" },
+      { sentence: "（ぜんりょく）で取り組む。", reading: "ぜんりょく", answer: "全力" },
+      { sentence: "（きかい）を使いこなす。", reading: "きかい", answer: "機械" },
+      { sentence: "（しょくりん）活動に参加する。", reading: "しょくりん", answer: "植林" },
+      { sentence: "本の（もくじ）を確認する。", reading: "もくじ", answer: "目次" },
+      { sentence: "（えいご）の勉強をする。", reading: "えいご", answer: "英語" },
+      { sentence: "（しんぶん）を読む。", reading: "しんぶん", answer: "新聞" },
+      { sentence: "動物園で（しろくま）を見る。", reading: "しろくま", answer: "白熊" },
+      { sentence: "（かぞく）で旅行する。", reading: "かぞく", answer: "家族" },
+      { sentence: "友達の（たんじょうび）を祝う。", reading: "たんじょうび", answer: "誕生日" },
+    ]
+  },
+];
+
+// ===== APP STATE =====
+let currentTest = 0;
+let currentQ = 0;
+let score = 0;
+let wrongAnswers = [];
+let isDrawing = false;
+let lastX = 0, lastY = 0;
+let ctx = null;
+let hasDrawn = false;
+let mode = 'draw'; // 'draw' or 'type'
+let retryMode = false;
+let retryQuestions = [];
+
+function loadProgress() {
+  try { return JSON.parse(localStorage.getItem('kanjiProgress') || '{}'); } catch { return {}; }
+}
+function saveProgress(testIdx, s, total) {
+  const p = loadProgress();
+  p[testIdx] = { score: s, total, date: new Date().toISOString().slice(0, 10) };
+  localStorage.setItem('kanjiProgress', JSON.stringify(p));
+}
+
+// ===== HOME SCREEN =====
+function renderHome() {
+  const container = document.getElementById('testButtons');
+  container.innerHTML = '';
+  const progress = loadProgress();
+  testData.forEach((test, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'test-btn';
+    const p = progress[i];
+    btn.innerHTML = `
+      <span>${test.name}（${test.questions.length}問）</span>
+      <span class="progress">${p ? p.score + '/' + p.total + ' ✓' : '未挑戦'}</span>
+    `;
+    btn.onclick = () => startTest(i);
+    container.appendChild(btn);
+  });
+}
+
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('.mode-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', (i === 0 && m === 'draw') || (i === 1 && m === 'type'));
+  });
+}
+
+function resetAll() {
+  if (confirm('すべての記録をリセットしますか？')) {
+    localStorage.removeItem('kanjiProgress');
+    renderHome();
+  }
+}
+
+// ===== QUIZ =====
+function startTest(testIdx) {
+  currentTest = testIdx;
+  currentQ = 0;
+  score = 0;
+  wrongAnswers = [];
+  retryMode = false;
+  showScreen('quiz');
+  showQuestion();
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function getQuestions() {
+  return retryMode ? retryQuestions : testData[currentTest].questions;
+}
+
+function showQuestion() {
+  const questions = getQuestions();
+  if (currentQ >= questions.length) { showResults(); return; }
+  const q = questions[currentQ];
+  document.getElementById('qNum').textContent = `問 ${currentQ + 1} / ${questions.length}`;
+  document.getElementById('qProgress').textContent = `${currentQ + 1}/${questions.length}`;
+  document.getElementById('qScore').textContent = `正解: ${score}`;
+  document.getElementById('progressFill').style.width = `${(currentQ / questions.length) * 100}%`;
+
+  // Highlight the reading in the sentence
+  const highlighted = q.sentence.replace(`（${q.reading}）`, `<span style="color:#ff6b6b;font-weight:bold">（${q.reading}）</span>`);
+  document.getElementById('qSentence').innerHTML = highlighted;
+  document.getElementById('qReading').textContent = `書く漢字: ${q.reading}`;
+
+  // Reset UI
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('feedback').innerHTML = '';
+  document.getElementById('nextBtn').style.display = 'none';
+
+  if (mode === 'draw') {
+    document.getElementById('drawMode').style.display = 'block';
+    document.getElementById('typeMode').style.display = 'none';
+    clearCanvas();
+  } else {
+    document.getElementById('drawMode').style.display = 'none';
+    document.getElementById('typeMode').style.display = 'block';
+    const input = document.getElementById('typeInput');
+    input.value = '';
+    input.focus();
+  }
+}
+
+function goHome() {
+  showScreen('home');
+  renderHome();
+}
+
+// ===== CANVAS DRAWING =====
+function initCanvas() {
+  const canvas = document.getElementById('drawCanvas');
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * 2;
+  canvas.height = rect.width;
+  canvas.style.height = (rect.width / 2) + 'px';
+  ctx = canvas.getContext('2d');
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = 6;
+  ctx.strokeStyle = '#333';
+
+  // Draw grid
+  drawGrid();
+
+  // Touch events
+  canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+  canvas.addEventListener('touchmove', onTouchMove, { passive: false });
+  canvas.addEventListener('touchend', onTouchEnd);
+  // Mouse events
+  canvas.addEventListener('mousedown', onMouseDown);
+  canvas.addEventListener('mousemove', onMouseMove);
+  canvas.addEventListener('mouseup', onMouseUp);
+  canvas.addEventListener('mouseleave', onMouseUp);
+}
+
+function drawGrid() {
+  if (!ctx) return;
+  const c = document.getElementById('drawCanvas');
+  ctx.save();
+  ctx.strokeStyle = '#ddd';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([5, 5]);
+  // Vertical center
+  ctx.beginPath();
+  ctx.moveTo(c.width / 2, 0);
+  ctx.lineTo(c.width / 2, c.height);
+  ctx.stroke();
+  // Horizontal center
+  ctx.beginPath();
+  ctx.moveTo(0, c.height / 2);
+  ctx.lineTo(c.width, c.height / 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 6;
+}
+
+function getPos(e, canvas) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  if (e.touches) {
+    return { x: (e.touches[0].clientX - rect.left) * scaleX, y: (e.touches[0].clientY - rect.top) * scaleY };
+  }
+  return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+}
+
+function onTouchStart(e) { e.preventDefault(); const p = getPos(e, e.target); startDraw(p.x, p.y); }
+function onTouchMove(e) { e.preventDefault(); const p = getPos(e, e.target); draw(p.x, p.y); }
+function onTouchEnd() { isDrawing = false; }
+function onMouseDown(e) { const p = getPos(e, e.target); startDraw(p.x, p.y); }
+function onMouseMove(e) { if (isDrawing) { const p = getPos(e, e.target); draw(p.x, p.y); } }
+function onMouseUp() { isDrawing = false; }
+
+function startDraw(x, y) {
+  isDrawing = true;
+  lastX = x; lastY = y;
+  hasDrawn = true;
+  document.getElementById('canvasGuide').style.opacity = '0';
+}
+
+function draw(x, y) {
+  if (!isDrawing) return;
+  ctx.beginPath();
+  ctx.moveTo(lastX, lastY);
+  ctx.lineTo(x, y);
+  ctx.stroke();
+  lastX = x; lastY = y;
+}
+
+function clearCanvas() {
+  if (!ctx) return;
+  const c = document.getElementById('drawCanvas');
+  ctx.clearRect(0, 0, c.width, c.height);
+  drawGrid();
+  hasDrawn = false;
+  document.getElementById('canvasGuide').style.opacity = '1';
+}
+
+// ===== ANSWER CHECKING =====
+function submitAnswer() {
+  if (!hasDrawn) { alert('漢字を書いてください！'); return; }
+  // In drawing mode, show the correct answer for self-check
+  showAnswer();
+}
+
+function submitTyped() {
+  const input = document.getElementById('typeInput').value.trim();
+  if (!input) { alert('漢字を入力してください！'); return; }
+  const q = getQuestions()[currentQ];
+  const isCorrect = input === q.answer || input === q.answer.replace(/する$|をする$/, '');
+  showFeedback(isCorrect);
+}
+
+function showAnswer() {
+  const q = getQuestions()[currentQ];
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback correct';
+  fb.innerHTML = `
+    <div>正解はこちら：</div>
+    <div class="answer-display">${q.answer}</div>
+    <div style="margin-top:12px;display:flex;gap:10px;justify-content:center;">
+      <button onclick="selfJudge(true)" style="padding:12px 24px;background:#1b4332;color:#4ecdc4;border:2px solid #4ecdc4;border-radius:12px;font-size:16px;font-weight:bold;cursor:pointer;">⭕ 正解</button>
+      <button onclick="selfJudge(false)" style="padding:12px 24px;background:#3d0000;color:#ff6b6b;border:2px solid #ff6b6b;border-radius:12px;font-size:16px;font-weight:bold;cursor:pointer;">❌ 不正解</button>
+    </div>
+  `;
+}
+
+function selfJudge(correct) {
+  showFeedback(correct);
+}
+
+function showFeedback(isCorrect) {
+  const q = getQuestions()[currentQ];
+  const fb = document.getElementById('feedback');
+  if (isCorrect) {
+    score++;
+    fb.className = 'feedback correct';
+    fb.innerHTML = `⭕ 正解！<div class="answer-display">${q.answer}</div>`;
+  } else {
+    wrongAnswers.push(q);
+    fb.className = 'feedback incorrect';
+    fb.innerHTML = `❌ 不正解<div class="answer-display">${q.answer}</div><div style="font-size:14px;margin-top:4px;">正解: ${q.answer}</div>`;
+  }
+  document.getElementById('qScore').textContent = `正解: ${score}`;
+  document.getElementById('nextBtn').style.display = 'block';
+}
+
+function skipQuestion() {
+  const q = getQuestions()[currentQ];
+  wrongAnswers.push(q);
+  currentQ++;
+  showQuestion();
+}
+
+function nextQuestion() {
+  currentQ++;
+  showQuestion();
+}
+
+// ===== RESULTS =====
+function showResults() {
+  const questions = getQuestions();
+  const total = questions.length;
+  const pct = Math.round((score / total) * 100);
+  document.getElementById('rScore').textContent = `${pct}%`;
+  document.getElementById('rDetail').textContent = `${score} / ${total} 問正解`;
+
+  if (!retryMode) {
+    saveProgress(currentTest, score, total);
+  }
+
+  const wrongList = document.getElementById('wrongList');
+  const wrongItems = document.getElementById('wrongItems');
+  const retryBtn = document.getElementById('retryBtn');
+  wrongItems.innerHTML = '';
+
+  if (wrongAnswers.length > 0) {
+    wrongList.style.display = 'block';
+    retryBtn.style.display = 'flex';
+    wrongAnswers.forEach(q => {
+      const div = document.createElement('div');
+      div.className = 'wrong-item';
+      div.innerHTML = `<span class="wrong-q">${q.reading}</span><span class="wrong-a">${q.answer}</span>`;
+      wrongItems.appendChild(div);
+    });
+  } else {
+    wrongList.style.display = 'none';
+    retryBtn.style.display = 'none';
+  }
+
+  showScreen('results');
+}
+
+function retryWrong() {
+  retryQuestions = [...wrongAnswers];
+  currentQ = 0;
+  score = 0;
+  wrongAnswers = [];
+  retryMode = true;
+  showScreen('quiz');
+  showQuestion();
+}
+
+// ===== INIT =====
+window.addEventListener('load', () => {
+  renderHome();
+  // Init canvas when quiz screen shows
+  const observer = new MutationObserver(() => {
+    if (document.getElementById('quiz').classList.contains('active')) {
+      setTimeout(initCanvas, 50);
+    }
+  });
+  observer.observe(document.getElementById('quiz'), { attributes: true, attributeFilter: ['class'] });
+});
+
+// Handle Enter key for typing mode
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && mode === 'type' && document.getElementById('quiz').classList.contains('active')) {
+    const nextBtn = document.getElementById('nextBtn');
+    if (nextBtn.style.display === 'block') {
+      nextQuestion();
+    } else {
+      submitTyped();
+    }
+  }
+});
+</script>
+</body>
+</html>
